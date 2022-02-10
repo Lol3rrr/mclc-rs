@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 pub use super::general::Edge;
 
 pub type Graph = super::general::Graph<NodeType>;
@@ -27,11 +25,11 @@ impl Graph {
         let removeable: Vec<_> = self
             .nodes
             .iter()
-            .filter(|n| match &n.inner {
-                NodeType::Input { .. } => true,
-                NodeType::Output { .. } => true,
-                NodeType::Variable { .. } => true,
-                _ => false,
+            .filter(|n| {
+                matches!(
+                    &n.inner,
+                    NodeType::Input { .. } | NodeType::Output { .. } | NodeType::Variable { .. }
+                )
             })
             .filter(|n| {
                 let inputs = self.edges_to_node(n.id);

@@ -58,7 +58,7 @@ where
         open_set.remove(index);
 
         let current_gscore = gscores.get(&current).cloned().unwrap();
-        let neighbours = neigh(&container, current.clone());
+        let neighbours = neigh(container, current.clone());
         for (neighbour, neighbour_cost) in neighbours {
             let tentative_gscore = current_gscore + neighbour_cost;
             let prev_neighbour_gscore = gscores.get(&neighbour).cloned().unwrap_or(i64::MAX);

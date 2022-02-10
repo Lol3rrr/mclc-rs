@@ -3,7 +3,6 @@ use std::fmt::Display;
 use space::Space;
 
 pub mod astar;
-pub mod commands;
 pub mod connect_nodes;
 pub mod placement;
 pub mod space;
@@ -121,12 +120,11 @@ pub fn generate_layout(graph: graph::normalized::Graph) -> Layout {
             nodes_to_place.remove(node_index);
 
             nodes_to_place.iter_mut().for_each(|(_, preds)| {
-                match preds.iter().enumerate().find(|(_, n)| n.id == to_place.id) {
-                    Some((pred_index, _)) => {
-                        preds.remove(pred_index);
-                    }
-                    None => {}
-                };
+                if let Some((pred_index, _)) =
+                    preds.iter().enumerate().find(|(_, n)| n.id == to_place.id)
+                {
+                    preds.remove(pred_index);
+                }
             });
 
             let ((width, depth, _), placed_data) =
@@ -243,11 +241,10 @@ impl MinecraftBlock {
 
 impl BlockLayout {
     pub fn place_commands(&self) -> Vec<String> {
-        let (stones, rest): (Vec<_>, Vec<_>) =
-            self.blocks.iter().partition(|block| match &block.data {
-                BlockData::Stone => true,
-                _ => false,
-            });
+        let (stones, rest): (Vec<_>, Vec<_>) = self
+            .blocks
+            .iter()
+            .partition(|block| matches!(&block.data, BlockData::Stone));
 
         let stone_cmds: Vec<_> = stones.into_iter().map(|b| b.place_cmd()).collect();
         let rest_cmds: Vec<_> = rest.into_iter().map(|r| r.place_cmd()).collect();
@@ -255,7 +252,7 @@ impl BlockLayout {
         stone_cmds.chunks(400).chain(rest_cmds.chunks(400))
             .map(|cmds| {
                 let bundled_cmds = cmds
-                    .into_iter()
+                    .iter()
                     .map(|raw_cmd| format!("{{id:command_block_minecart,Command:'{}'}},", raw_cmd))
                     .fold("".to_string(), |mut acc, cmd| {
                         acc.push_str(&cmd);

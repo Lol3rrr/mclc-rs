@@ -81,7 +81,7 @@ where
             }
         };
 
-        let n_value = value(&cell);
+        let n_value = value(cell);
 
         *cell = n_value;
     }
@@ -91,18 +91,13 @@ where
             .clone()
             .into_iter()
             .enumerate()
-            .map(|(z, layer)| {
-                layer
-                    .into_iter()
-                    .enumerate()
-                    .map(move |(y, row)| {
-                        row.into_iter()
-                            .enumerate()
-                            .map(move |(x, c)| ((x, y, z), c))
-                    })
-                    .flatten()
+            .flat_map(|(z, layer)| {
+                layer.into_iter().enumerate().flat_map(move |(y, row)| {
+                    row.into_iter()
+                        .enumerate()
+                        .map(move |(x, c)| ((x, y, z), c))
+                })
             })
-            .flatten()
     }
 
     pub fn size(&self) -> (usize, usize, usize) {
@@ -118,5 +113,14 @@ where
             .unwrap();
 
         (width, depth, height)
+    }
+}
+
+impl<T> Default for Space<T>
+where
+    T: Clone + Default,
+{
+    fn default() -> Self {
+        Self::new()
     }
 }

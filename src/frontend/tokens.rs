@@ -65,7 +65,7 @@ pub fn tokenize(span: Span) -> Vec<Token> {
                         "out_ports" => {
                             result.push(Token(TokenData::OutPorts, inner_span));
                         }
-                        other => {
+                        _ => {
                             result.push(Token(
                                 TokenData::Literal(inner.to_string()),
                                 span.sub_span(start..i),

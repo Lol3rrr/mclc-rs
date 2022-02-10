@@ -24,7 +24,7 @@ pub enum NodeType {
 }
 
 impl Graph {
-    pub fn to_normalized(self) -> normalized::Graph {
+    pub fn into_normalized(self) -> normalized::Graph {
         let nodes: Vec<_> = self
             .nodes
             .into_iter()
@@ -78,7 +78,7 @@ impl Graph {
         loop {
             let multiple_targets_res = src_connections.iter().find(|(_, dest)| dest.len() > 1);
             let (src, targets) = match multiple_targets_res {
-                Some((s, t)) => (s.clone(), t.clone()),
+                Some((s, t)) => (*s, t.clone()),
                 None => break,
             };
 

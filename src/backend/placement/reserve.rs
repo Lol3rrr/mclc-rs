@@ -7,19 +7,17 @@ pub fn reserve_around(
     reserve_size: usize,
 ) {
     let (x, y, z) = pos;
-    let (width, depth, height) = size;
+    let (width, depth, _) = size;
 
-    let row = ((x.saturating_sub(reserve_size))..(x.saturating_add(width + reserve_size)));
+    let row = (x.saturating_sub(reserve_size))..(x.saturating_add(width + reserve_size));
     let top_row = row.clone().map(|x_pos| (x_pos, y - 1, z));
-    let bottom_row = row.clone().map(|x_pos| (x_pos, y + depth, z));
+    let bottom_row = row.map(|x_pos| (x_pos, y + depth, z));
 
-    let column = ((y.saturating_sub(2))..(y.saturating_add(depth + 1)));
+    let column = (y.saturating_sub(2))..(y.saturating_add(depth + 1));
     let left_column = column
         .clone()
         .map(|y_pos| (x.saturating_sub(reserve_size), y_pos, z));
-    let right_column = column
-        .clone()
-        .map(|y_pos| (x.saturating_add(width + reserve_size), y_pos, z));
+    let right_column = column.map(|y_pos| (x.saturating_add(width + reserve_size), y_pos, z));
 
     let raw_sides = left_column.chain(right_column);
 

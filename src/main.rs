@@ -14,7 +14,7 @@ fn main() {
 
     let content = std::fs::read_to_string(args.file).unwrap();
 
-    let mut graph = mclc::frontend::parse(content, None).unwrap();
+    let mut graph = mclc::frontend::parse(content, args.target).unwrap();
     graph.optimize();
 
     println!("Generated Graph");

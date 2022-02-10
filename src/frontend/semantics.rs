@@ -81,7 +81,7 @@ pub struct Entity {
 pub fn parse(raw_entities: Vec<syntax::Entity>) -> Vec<Entity> {
     let headers: HashMap<String, EntityHeader> = raw_entities
         .iter()
-        .map(|e| parse_entity_header(e))
+        .map(parse_entity_header)
         .map(|h| (h.name.clone(), h))
         .collect();
 

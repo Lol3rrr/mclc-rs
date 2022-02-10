@@ -36,7 +36,7 @@ impl Graph {
 
             let edges_to = self.edges_to_node(n.id);
 
-            if edges_to.len() > 0 {
+            if !edges_to.is_empty() {
                 continue;
             }
 
@@ -57,7 +57,7 @@ impl Graph {
 
             let edges_from = self.edges_from_node(n.id);
 
-            if edges_from.len() > 0 {
+            if !edges_from.is_empty() {
                 continue;
             }
 
@@ -67,15 +67,15 @@ impl Graph {
         result
     }
 
-    pub fn to_builtin(self, entities: &HashMap<String, Graph>) -> super::builtin::Graph {
+    pub fn into_builtin(self, entities: &HashMap<String, Graph>) -> super::builtin::Graph {
         let mut nodes = self.nodes;
         let mut edges = self.edges;
 
         loop {
-            let found_result = nodes.iter().enumerate().find(|(_, n)| match n.inner {
-                NodeType::EntityOp { .. } => true,
-                _ => false,
-            });
+            let found_result = nodes
+                .iter()
+                .enumerate()
+                .find(|(_, n)| matches!(n.inner, NodeType::EntityOp { .. }));
 
             let replace_index = match found_result {
                 Some((i, _)) => i,
@@ -86,7 +86,7 @@ impl Graph {
 
             let name = match &to_replace.inner {
                 NodeType::EntityOp { name } => name,
-                other => unreachable!(),
+                _ => unreachable!(),
             };
 
             let mut replacement_graph = entities.get(name).unwrap().clone();
@@ -128,7 +128,7 @@ impl Graph {
                     NodeType::Input { name, number } => builtin::NodeType::Input { name, number },
                     NodeType::Output { name, number } => builtin::NodeType::Output { name, number },
                     NodeType::Variable { name } => builtin::NodeType::Variable { name },
-                    NodeType::EntityOp { name } => panic!("Unexpected Entity Op"),
+                    NodeType::EntityOp { .. } => panic!("Unexpected Entity Op"),
                     NodeType::BuiltinOp { op } => {
                         let n_op = match op {
                             BuiltinOp::And => builtin::BuiltinOp::And,

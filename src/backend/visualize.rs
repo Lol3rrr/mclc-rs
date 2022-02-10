@@ -158,14 +158,14 @@ fn cells(space: &Space<SpaceCell>) -> svg::node::element::Group {
                 match direction {
                     Orientation::East => {
                         let torch_size = SCALE / 5;
-                        let torch_x = x + SCALE / 5 * 1;
+                        let torch_x = x + SCALE / 5;
 
                         comparator = comparator
                             .add(
                                 svg::node::element::Rectangle::new()
                                     .set("fill", "#FF0000")
                                     .set("x", torch_x)
-                                    .set("y", y + SCALE / 5 * 1)
+                                    .set("y", y + SCALE / 5)
                                     .set("width", torch_size)
                                     .set("height", torch_size),
                             )
@@ -197,7 +197,7 @@ fn cells(space: &Space<SpaceCell>) -> svg::node::element::Group {
             SpaceBlock::TorchOnBlock { direction } => {
                 let torch_size = SCALE / 5;
                 let (x, y) = match direction {
-                    Orientation::West => (x + 0, y + SCALE / 2 - torch_size / 2),
+                    Orientation::West => (x, y + SCALE / 2 - torch_size / 2),
                     other => {
                         dbg!(other);
                         todo!()

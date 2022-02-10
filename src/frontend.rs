@@ -27,6 +27,7 @@ impl Span {
         &self.content[self.area.clone()]
     }
 
+    #[must_use]
     pub fn sub_span(&self, area: Range<usize>) -> Self {
         Self {
             area,
@@ -52,10 +53,8 @@ where
     let s_entities = semantics::parse(syntax);
 
     let target_entity = match target {
-        Some(t_name) => {
-            todo!()
-        }
-        None => s_entities.get(0).unwrap().clone(),
+        Some(t_name) => s_entities.iter().find(|e| e.name == t_name).unwrap(),
+        None => s_entities.get(0).unwrap(),
     };
 
     let target_e_graph = target_entity.graph();
@@ -64,7 +63,7 @@ where
         .map(|e| (e.name.clone(), e.graph()))
         .collect();
 
-    let target_b_graph = target_e_graph.to_builtin(&all_e_graphs);
+    let target_b_graph = target_e_graph.into_builtin(&all_e_graphs);
 
-    Ok(target_b_graph.to_normalized())
+    Ok(target_b_graph.into_normalized())
 }

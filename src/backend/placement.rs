@@ -14,7 +14,7 @@ pub fn place_node(
     z_pos: usize,
 ) -> ((usize, usize, usize), PlacedNodeData) {
     match to_place.inner {
-        graph::normalized::NodeType::Input { name, number } => {
+        graph::normalized::NodeType::Input { name, .. } => {
             space.set((x_offset, y_offset, z_pos), |_| {
                 SpaceCell::Used(SpaceBlock::Redstone)
             });
@@ -24,7 +24,7 @@ pub fn place_node(
             reserve_around(space, (x_offset, y_offset, z_pos), (1, 1, 1), RESERVE_SPACE);
             ((1, 1, 1), PlacedNodeData::Input { name })
         }
-        graph::normalized::NodeType::Output { name, number } => {
+        graph::normalized::NodeType::Output { name, .. } => {
             space.set((x_offset, y_offset, z_pos), |_| {
                 SpaceCell::Used(SpaceBlock::Redstone)
             });

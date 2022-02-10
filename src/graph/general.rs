@@ -46,7 +46,7 @@ impl<T> Graph<T> {
         self.edges
             .iter()
             .filter(|e| e.dest_id == target_id)
-            .map(|e| e.clone())
+            .cloned()
             .collect()
     }
 
@@ -54,7 +54,7 @@ impl<T> Graph<T> {
         self.edges
             .iter()
             .filter(|e| e.src_id == src_id)
-            .map(|e| e.clone())
+            .cloned()
             .collect()
     }
 
