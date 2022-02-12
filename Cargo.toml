@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 svg = "0.10.0"
+ahash = "0.7"
 
 # For CLI stuff
 clap = { version = "3.0.7", features = ["derive"] }

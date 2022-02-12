@@ -1,12 +1,20 @@
-use std::{collections::HashMap, fmt::Debug, hash::Hash};
+use std::{
+    collections::HashMap,
+    fmt::Debug,
+    hash::{BuildHasher, Hash},
+};
+
+mod openset;
+pub use openset::*;
 
 pub trait Container {
     type Index;
 }
 
-fn reconstruct_path<I>(came_from: &HashMap<I, I>, mut current: I) -> Vec<I>
+fn reconstruct_path<I, S>(came_from: &HashMap<I, I, S>, mut current: I) -> Vec<I>
 where
     I: Eq + Hash + Clone,
+    S: BuildHasher,
 {
     let mut path = vec![current.clone()];
 
@@ -31,31 +39,20 @@ where
     DF: FnMut(C::Index, C::Index) -> i64,
     NF: FnMut(&C, C::Index) -> Vec<(C::Index, i64)>,
 {
-    let mut open_set: Vec<C::Index> = vec![start.clone()];
-    let mut came_from: HashMap<C::Index, C::Index> = HashMap::new();
-    let mut gscores: HashMap<C::Index, i64> = HashMap::new();
-    let mut fscores: HashMap<C::Index, i64> = HashMap::new();
+    let mut n_openset = OpenSet::new((start.clone(), dist(start.clone(), dest.clone())));
+    let mut came_from: HashMap<C::Index, C::Index, ahash::RandomState> = HashMap::default();
+    let mut gscores: HashMap<C::Index, i64, ahash::RandomState> = HashMap::default();
+    let mut fscores: HashMap<C::Index, i64, ahash::RandomState> = HashMap::default();
 
     gscores.insert(start.clone(), 0);
     fscores.insert(start.clone(), dist(start.clone(), dest.clone()));
 
-    while !open_set.is_empty() {
-        let ((index, current), _): ((usize, C::Index), i64) = open_set
-            .iter()
-            .enumerate()
-            .map(|(i, c)| {
-                let f_score_val = fscores.get(c).cloned().unwrap();
-                ((i, c), f_score_val)
-            })
-            .min_by(|(_, x), (_, y)| x.cmp(y))
-            .map(|((i, c), v)| ((i, c.clone()), v))
-            .unwrap();
+    while !n_openset.is_empty() {
+        let current = n_openset.pop();
 
         if current == dest {
             return reconstruct_path(&came_from, current);
         }
-
-        open_set.remove(index);
 
         let current_gscore = gscores.get(&current).cloned().unwrap();
         let neighbours = neigh(container, current.clone());
@@ -71,14 +68,15 @@ where
                     tentative_gscore + dist(neighbour.clone(), dest.clone()),
                 );
 
-                if !open_set.contains(&neighbour) {
-                    open_set.push(neighbour);
-                }
+                n_openset.update(
+                    neighbour.clone(),
+                    tentative_gscore + dist(neighbour.clone(), dest.clone()),
+                );
             }
         }
     }
 
     dbg!(start, dest);
 
-    todo!("Run A*")
+    todo!("Could not find a Path between these Points")
 }

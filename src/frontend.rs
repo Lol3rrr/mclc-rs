@@ -36,19 +36,39 @@ impl Span {
     }
 }
 
+impl<S> From<S> for Span
+where
+    S: Into<String>,
+{
+    fn from(content: S) -> Self {
+        Self::new(content)
+    }
+}
+
 mod semantics;
 mod syntax;
 mod tokens;
 
-pub fn parse<S>(content: S, target: Option<String>) -> Result<graph::normalized::Graph, ()>
+#[derive(Debug)]
+pub enum ParseError {
+    Syntax(syntax::Error),
+}
+
+impl From<syntax::Error> for ParseError {
+    fn from(e: syntax::Error) -> Self {
+        Self::Syntax(e)
+    }
+}
+
+pub fn parse<S>(content: S, target: Option<String>) -> Result<graph::normalized::Graph, ParseError>
 where
-    S: Into<String>,
+    S: Into<Span>,
 {
-    let content_span = Span::new(content);
+    let content_span = content.into();
 
     let tokens = tokens::tokenize(content_span);
 
-    let syntax = syntax::parse(tokens).unwrap();
+    let syntax = syntax::parse(tokens)?;
 
     let s_entities = semantics::parse(syntax);
 

@@ -101,7 +101,7 @@ pub fn generate_layout(graph: graph::normalized::Graph) -> Layout {
     let mut x_offset = 1;
     let z = 8;
     while !nodes_to_place.is_empty() {
-        let placeable: Vec<graph::normalized::Node> = nodes_to_place
+        let placeable: Vec<_> = nodes_to_place
             .iter()
             .filter(|(_, preds)| preds.is_empty())
             .map(|(n, _)| n.clone())

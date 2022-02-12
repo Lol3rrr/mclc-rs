@@ -1,5 +1,3 @@
-use std::vec;
-
 use crate::{
     backend::{
         astar, space::Space, PlacedNode, PlacedNodeData, SpaceBlock, SpaceCell, RESERVE_SPACE,
@@ -89,18 +87,18 @@ fn neighbours(
 ) -> Vec<((usize, usize, usize), i64)> {
     let base = base_neighbours(s, pos);
 
-    if let Some(v) = base.iter().find(|(p, _)| p == &dest) {
-        return vec![*v];
-    }
-
     base.into_iter()
-        .filter(|(pos, _)| matches!(s.get(*pos), SpaceCell::Empty))
-        .filter(|((x, y, z), _)| matches!(s.get((*x, *y, z + 1)), SpaceCell::Empty))
+        // Checks if the Block  itself is actually free
+        .filter(|(pos, _)| matches!(s.get(*pos), SpaceCell::Empty) || pos == &dest)
+        // Checks if the Block below is free as we need to place a Solid Block there
+        .filter(|((x, y, z), _)| {
+            matches!(s.get((*x, *y, z + 1)), SpaceCell::Empty) || (*x, *y, *z) == dest
+        })
         .filter(|((x, y, z), _)| {
             matches!(
                 s.get((*x, *y, z - 1)),
                 SpaceCell::Empty | SpaceCell::Reserved
-            )
+            ) || (*x, *y, *z) == dest
         })
         .collect()
 }
@@ -108,7 +106,7 @@ fn neighbours(
 fn base_neighbours(
     s: &Space<SpaceCell>,
     pos: (usize, usize, usize),
-) -> Vec<((usize, usize, usize), i64)> {
+) -> impl Iterator<Item = ((usize, usize, usize), i64)> {
     let base_cords = [
         (pos.0 + 1, pos.1, pos.2),
         (pos.0 - 1, pos.1, pos.2),
@@ -126,7 +124,7 @@ fn base_neighbours(
 
     let upper_cords = base_cords
         .into_iter()
-        .filter(|_| top_free)
+        .filter(move |_| top_free)
         .map(|(x, y, z)| (x, y, z - 1));
 
     base_cords
@@ -134,7 +132,6 @@ fn base_neighbours(
         .map(|p| (p, 1))
         .chain(lower_cords.map(|p| (p, 2)))
         .chain(upper_cords.map(|p| (p, 2)))
-        .collect()
 }
 
 fn place_path(s: &mut Space<SpaceCell>, path: Vec<(usize, usize, usize)>) {

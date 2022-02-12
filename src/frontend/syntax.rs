@@ -1,46 +1,25 @@
 use super::tokens::{Token, TokenData};
 use super::Span;
 
-struct ScopeIter<I> {
-    iter: I,
-    level: usize,
+mod scopeiter;
+use scopeiter::*;
+
+#[derive(Debug)]
+pub enum Error {
+    MissingEntityName,
+    UnexpectedToken {
+        expected: Vec<TokenNames>,
+        got: Token,
+    },
 }
 
-impl<I> ScopeIter<I> {
-    pub fn new(iter: I) -> Self {
-        Self { iter, level: 1 }
-    }
-}
-
-impl<I> Iterator for ScopeIter<I>
-where
-    I: Iterator<Item = Token>,
-{
-    type Item = Token;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.level == 0 {
-            return None;
-        }
-
-        let next = self.iter.next()?;
-
-        match &next.0 {
-            TokenData::OpenCurly => {
-                self.level += 1;
-            }
-            TokenData::CloseCurly => {
-                self.level -= 1;
-
-                if self.level == 0 {
-                    return None;
-                }
-            }
-            _ => {}
-        };
-
-        Some(next)
-    }
+#[derive(Debug)]
+pub enum TokenNames {
+    Literal,
+    InPorts,
+    OutPorts,
+    Behaviour,
+    OpenCurly,
 }
 
 fn parse_args(tokens: &mut dyn Iterator<Item = Token>) -> Vec<Token> {
@@ -200,7 +179,7 @@ where
     result
 }
 
-fn parse_entity<I>(name: Span, mut tokens: ScopeIter<I>) -> Entity
+fn parse_entity<I>(name: Span, mut tokens: ScopeIter<I>) -> Result<Entity, Error>
 where
     I: Iterator<Item = Token>,
 {
@@ -249,17 +228,23 @@ where
 
                 entity.behaviour = behaviour;
             }
-            other => {
-                dbg!(other);
-                todo!()
+            _ => {
+                return Err(Error::UnexpectedToken {
+                    expected: vec![
+                        TokenNames::InPorts,
+                        TokenNames::OutPorts,
+                        TokenNames::Behaviour,
+                    ],
+                    got: tok,
+                })
             }
         };
     }
 
-    entity
+    Ok(entity)
 }
 
-pub fn parse(tokens: Vec<Token>) -> Result<Vec<Entity>, ()> {
+pub fn parse(tokens: Vec<Token>) -> Result<Vec<Entity>, Error> {
     let mut tokens = tokens.into_iter();
 
     let mut entities = Vec::new();
@@ -267,22 +252,30 @@ pub fn parse(tokens: Vec<Token>) -> Result<Vec<Entity>, ()> {
     while let Some(tok) = tokens.next() {
         match tok.0 {
             TokenData::Entity => {
-                let name_tok = tokens.next().unwrap();
+                let name_tok = tokens.next().ok_or(Error::MissingEntityName)?;
                 let entity_name = match name_tok.0 {
                     TokenData::Literal(_) => name_tok.1,
-                    other => panic!("Expected Literal with Name, got {:?}", other),
+                    _ => {
+                        return Err(Error::UnexpectedToken {
+                            expected: vec![TokenNames::Literal],
+                            got: name_tok,
+                        })
+                    }
                 };
 
                 let next_tok = tokens.next().unwrap();
                 match next_tok.0 {
                     TokenData::OpenCurly => {}
-                    other => {
-                        panic!("Expected Curly Brace, got: {:?}", other);
+                    _ => {
+                        return Err(Error::UnexpectedToken {
+                            expected: vec![TokenNames::OpenCurly],
+                            got: next_tok,
+                        })
                     }
                 };
 
                 let in_scope_iter = ScopeIter::new(tokens.by_ref());
-                let entity = parse_entity(entity_name, in_scope_iter);
+                let entity = parse_entity(entity_name, in_scope_iter)?;
 
                 entities.push(entity);
             }
